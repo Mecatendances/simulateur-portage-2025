@@ -1,20 +1,18 @@
-# Utiliser une image Python légère
 FROM python:3.9-slim
 
-# Définir le répertoire de travail
 WORKDIR /app
 
-# Copier les fichiers nécessaires
-COPY requirements.txt .
+# Dépendances système pour weasyprint
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 \
+    libffi-dev libcairo2 libglib2.0-0 fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
 
-# Installer les dépendances
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier le code de l'application
 COPY . .
 
-# Exposer le port standard de Streamlit
 EXPOSE 8501
 
-# Commande de lancement
 CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]

@@ -40,6 +40,10 @@ JOURS_OUVRES_2026 = {
     1: 21, 2: 20, 3: 22, 4: 21, 5: 18, 6: 22,
     7: 22, 8: 21, 9: 22, 10: 22, 11: 20, 12: 22,
 }
+JOURS_CALENDAIRES_2026 = {
+    1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30,
+    7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31,
+}
 MOIS_LABELS = {
     1: "Janvier", 2: "Février", 3: "Mars", 4: "Avril",
     5: "Mai", 6: "Juin", 7: "Juillet", 8: "Août",
@@ -88,6 +92,8 @@ COTISATIONS_2026 = {
     "taxe_appr":     {"pat": 0.0059, "sal": 0.0,    "base": "TOTALITE"},
     "taxe_appr_lib": {"pat": 0.0009, "sal": 0.0,    "base": "TOTALITE"},
     "dialogue_soc":  {"pat": 0.0001, "sal": 0.0,    "base": "TOTALITE"},
+    "paritarisme":   {"pat": 0.000100, "sal": 0.0,  "base": "TOTALITE"},
+    "adsat":         {"pat": 0.000200, "sal": 0.0,  "base": "TOTALITE"},
 
     # SUR TRANCHE A (PMSS)
     "vieillesse_pl": {"pat": 0.0855, "sal": 0.0690, "base": "TRANCHE_A"},
@@ -124,6 +130,8 @@ COTISATIONS_LABELS = {
     "taxe_appr": "Taxe d'apprentissage",
     "taxe_appr_lib": "Taxe appr. (liberatoire)",
     "dialogue_soc": "Dialogue social",
+    "paritarisme": "Développement du Paritarisme",
+    "adsat": "Contribution ADSAT",
     "vieillesse_pl": "Vieillesse plafonnee",
     "fnal": "FNAL",
     "retraite_t1": "Retraite AGIRC-ARRCO T1",
@@ -328,7 +336,8 @@ def calculate_salary(tjm, days_worked_month, days_worked_week,
                      jours_teletravail=0, effectif_sup_50=False,
                      frais_partages_pct=0.0, commission_apporteur=0.0,
                      type_contrat="CDI", provision_cp=False,
-                     nb_journees=0, nb_jours_ouvres=22):
+                     nb_journees=0, nb_jours_ouvres=22,
+                     mois_num=3, is_temps_partiel=False):
 
     cfg_base = st.session_state.cfg_base_salary
     rate_gestion = st.session_state.cfg_frais_gestion / 100.0
@@ -336,18 +345,22 @@ def calculate_salary(tjm, days_worked_month, days_worked_week,
     rate_cp = st.session_state.cfg_taux_cp / 100.0
 
     pmss = st.session_state.cfg_pmss
+    pmss_complet = pmss  # 4005€ — toujours utilisé pour la mutuelle
+    if is_temps_partiel and nb_journees > 0 and nb_jours_ouvres > 0:
+        pmss = round(pmss_complet * nb_journees / nb_jours_ouvres, 2)
+
     smic = st.session_state.cfg_smic_mensuel
     atmp_rate = st.session_state.cfg_taux_atmp / 100.0
     fnal_rate = FNAL_TAUX_SUP_50 if effectif_sup_50 else FNAL_TAUX_INF_50
 
-    # Mutuelle
+    # Mutuelle (toujours sur PMSS complet)
     mutuelle_total_cost = 0.0
     mutuelle_part_pat = 0.0
     mutuelle_part_sal = 0.0
     if use_mutuelle:
         mutuelle_rate = st.session_state.cfg_mutuelle_taux / 100.0
         split_pat = st.session_state.cfg_mutuelle_part_pat / 100.0
-        mutuelle_total_cost = pmss * mutuelle_rate
+        mutuelle_total_cost = pmss_complet * mutuelle_rate
         mutuelle_part_pat = round(mutuelle_total_cost * split_pat, 2)
         mutuelle_part_sal = round(mutuelle_total_cost * (1 - split_pat), 2)
 
@@ -615,6 +628,8 @@ def calculate_salary(tjm, days_worked_month, days_worked_week,
         "brut_hors_cp": brut_hors_cp,
         "employee_charges_hors_cp": employee_charges_hors_cp,
         "net_hors_cp": net_hors_cp,
+        "pmss_proratise": pmss,
+        "pmss_complet": pmss_complet,
     }
 
 # --- Chemin logo ---
@@ -1106,7 +1121,9 @@ results = calculate_salary(tjm, days_worked_month, days_worked_week,
                            ik_total, igd_total, expenses_other, use_reserve, use_mutuelle,
                            nb_titres_restaurant, frais_intermediation_pct, jours_teletravail,
                            effectif_sup_50, frais_partages_pct, commission_apporteur,
-                           type_contrat, provision_cp, nb_journees, nb_jours_ouvres)
+                           type_contrat, provision_cp, nb_journees, nb_jours_ouvres,
+                           mois_num=mois_num,
+                           is_temps_partiel=(temps_travail == "Partiel"))
 
 # Main : Onglets
 tab_simu, tab_config, tab_comm = st.tabs(["Resultats Simulation", "Configuration Globale", "Email & Explications"])
