@@ -215,12 +215,13 @@ Le simulateur calcule **24 types de cotisations** répartis sur 3 assiettes :
 
 ### 5.5 Étape 5 — Réduction RGDU 2026
 
-La **Réduction Générale Dégressive Unique** s'applique automatiquement aux salaires inférieurs à 3 SMIC annuels (54 903,36 €).
+La **Réduction Générale Dégressive Unique** s'applique automatiquement aux salaires inférieurs à 3 SMIC mensuels (5 469,09 €).
 
 ```
-ratio       = (3 × SMIC / Brut_annuel) − 1
+seuil       = 3 × SMIC_mensuel
+ratio       = (seuil / Brut_mensuel) − 1
 coefficient = Tmin + Tdelta × (0,5 × ratio) ^ 1,75
-réduction   = coefficient × Brut_annuel / 12
+réduction   = coefficient × Brut_mensuel
 ```
 
 Paramètres selon la taille d'entreprise :
@@ -368,7 +369,7 @@ Le simulateur reproduit fidèlement le format de calcul du logiciel de paie Sila
 |-----------|-------------|------|
 | SMIC mensuel | 1 823,03 € | Seuil RGDU, calcul réductions |
 | PMSS | 4 005 € | Plafond Sécurité Sociale (Tranche A) |
-| SMIC annuel × 3 | 54 903,36 € | Seuil d'application RGDU |
+| SMIC mensuel × 3 | 5 469,09 € | Seuil d'application RGDU (mensuel) |
 | Salaire de base | 2 374 € | Référence temps plein |
 | Frais de gestion | 5% | Commission de la société de portage |
 | Taux prime | 5% | Prime d'apport d'affaires |

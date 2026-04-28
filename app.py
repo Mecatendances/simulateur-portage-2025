@@ -177,20 +177,20 @@ if 'cfg_pct_transport' not in st.session_state:
 def calculer_rgdu(brut_mensuel, smic_mensuel, use_fnal_50=True):
     """
     Calcule la Reduction Generale Degressive Unique (RGDU) 2026
-    Retourne le montant de la reduction des charges patronales
+    Calcul effectue en valeurs mensuelles.
+    Retourne le montant mensuel de la reduction des charges patronales.
     """
-    smic_annuel = smic_mensuel * 12
-    brut_annuel = brut_mensuel * 12
+    seuil_mensuel = RGDU_SEUIL_SMIC * smic_mensuel
 
-    # Pas de reduction au-dela de 3 SMIC
-    if brut_annuel >= RGDU_SEUIL_SMIC * smic_annuel:
+    # Pas de reduction au-dela de 3 SMIC mensuels
+    if brut_mensuel >= seuil_mensuel:
         return 0.0
 
     # Choix du Tdelta selon FNAL
     tdelta = RGDU_TDELTA_FNAL_50 if use_fnal_50 else RGDU_TDELTA_FNAL_10
 
-    # Formule RGDU 2026
-    ratio = (RGDU_SEUIL_SMIC * smic_annuel / brut_annuel) - 1
+    # Formule RGDU 2026 (mensuelle)
+    ratio = (seuil_mensuel / brut_mensuel) - 1
     if ratio <= 0:
         return 0.0
 
